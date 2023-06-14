@@ -1,0 +1,66 @@
+<?xml version="1.0" standalone="yes"?>
+<EDDExample>
+  <!-- rate at which data will be acquired in seconds -->
+  <AcquisitionRate>10</AcquisitionRate>
+  <DataItems>
+    <!-- Data Item definition
+          name:  name of data item
+                 Predefined name are:
+                   - ramp:    Number 0 to 100 incrementing by 7.
+                   - wave:    sine wave:  value 0 to 100.
+                   - sine:    sine wave:  value +/- 1.0.
+                   - random:  random number between 0 - 100.
+                   - toggle:  value toggles between 0 and 1.
+                   - dig5:    value toggles every 5 seconds.
+                   - dig:     value toggels every 1 second.
+				   - array:   iterate through array of data items.
+                 The number of characters in ramp, wave and sine effect their output.
+                 For example:  Sine123 is different then ASine.
+                 The period of the sine and wave are effected by the number of characters.
+                 The initial ramp value is based on the number of characters.
+                   
+          type:  analog | digital | string   Optional:  default is analog
+          readOnly:   true | false   Optional:  default is false.
+          default:  default value of item.  Optional.
+    -->
+    <DataItem name="String1" type="string" readOnly="false" default="hello" />
+    <DataItem name="StringArray1" type="string" default="hello">
+      <!-- Array of values required when name contains predefined type: "array".  
+	       Values read individually and sequentially at the AquisitionRate.  
+		   Automatically wraps at end.
+      -->      
+      <Values>
+        <Value>This</Value>
+        <Value>is</Value>
+        <Value>for</Value>
+        <Value>QA</Value>
+      </Values>
+    </DataItem>
+    <DataItem name="Analog1" type="analog" default="3.1415916" />
+    <DataItem name="AnalogArray1" default="3.1415916">
+      <Values>
+        <Value>1.0</Value>
+        <Value>1.3</Value>
+        <Value>2.6</Value>
+        <Value>-4.5</Value>
+      </Values>
+    </DataItem>
+    <DataItem name="Digital1" type="digital" default="0" />
+    <DataItem name="DigitalArray1" type="digital" default="0">
+      <Values>
+        <Value>1</Value>
+        <Value>0</Value>
+        <Value>0</Value>
+        <Value>0</Value>
+        <Value>1</Value>
+      </Values>
+    </DataItem>
+    <DataItem name="sine" default="0.0" />
+    <DataItem name="wave" />
+    <DataItem name="dig5" />
+    <DataItem name="toggle" />
+    <DataItem name="dig1" />
+    <DataItem name="random" />
+    <DataItem name="ramp" />
+  </DataItems>
+</EDDExample>

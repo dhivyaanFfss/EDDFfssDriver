@@ -1,0 +1,38 @@
+<?xml version="1.0" standalone="yes"?>
+<PersistedData TerseType="1">
+<i>1</i>
+<PointerList>
+	<EMsgSpec>
+		<i>0</i>
+		<s>"UNKNOWN Message!!!!!!!"</s>
+	</EMsgSpec>
+	<EMsgSpec>
+		<i>1</i>
+		<s>"UNKNOWN Message!!!!!!!"</s>
+	</EMsgSpec>
+	<EMsgSpec>
+		<i>2</i>
+		<s>"EEDDExample"</s>
+	</EMsgSpec>
+	<EMsgSpec>
+		<i>3</i>
+		<s>"EEDDExample"</s>
+	</EMsgSpec>
+	<EMsgSpec>
+		<i>4</i>
+		<s>"%s"</s>
+	</EMsgSpec>
+	<EMsgSpec>
+		<i>5</i>
+		<s>"Could not open configuration file: %s"</s>
+	</EMsgSpec>
+	<EMsgSpec>
+		<i>6</i>
+		<s>"Invalid syntax in configuration file %s"</s>
+	</EMsgSpec>
+	<EMsgSpec>
+		<i>7</i>
+		<s>"Ignoring array defined for data item:  %s"</s>
+	</EMsgSpec>
+</PointerList>
+</PersistedData>
