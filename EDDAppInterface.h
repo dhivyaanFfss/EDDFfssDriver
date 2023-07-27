@@ -23,6 +23,7 @@ public:
     bool WaitForSysAppCmd(std::string&);
     bool SendToSysApp(const char* message, bool flush = false);
     bool StopConnection();
+    bool KillProcess();
 
     virtual ~SysAppIntf();
 

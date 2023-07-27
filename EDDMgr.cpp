@@ -181,9 +181,11 @@ EDDMgr::~EDDMgr()
 //*****************************************************************************
 bool EDDMgr::GetInterface(KERNEL_IID InterfaceID, void** ppInterface)
 {
-    *ppInterface = NULL;
+    g_pIKernelBase->GetInterface(InterfaceID, ppInterface);
+    if (ppInterface == NULL)
+        return false;
 
-    return false;
+    return true;
 }
 
 //*****************************************************************************
@@ -263,6 +265,11 @@ KERESULT EDDMgr::Initialize()
             return KE_FAILED;
         }
 
+        m_enterpriseComm = EnterpriseCommunication();
+        m_enterpriseComm.Initialize();
+
+        m_agentLifecycle = AgentLifecycle();
+        m_agentLifecycle.Initialize();
     }
     return KE_OK;
 }
@@ -382,3 +389,14 @@ ThreadReturn EDDMgr::AppInterfaceThread()
     return (ThreadReturn) 1;
 }
 
+//*****************************************************************************
+KERESULT EDDMgr::GetServerDiagnosis(EString& esDiagnosis)
+{
+    return m_enterpriseComm.GetServerDiagnosis(esDiagnosis);
+}
+
+//*****************************************************************************
+KERESULT EDDMgr::RestartAgent()
+{
+    return m_agentLifecycle.RestartAgent();
+}

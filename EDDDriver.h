@@ -20,6 +20,7 @@
 #define __EDD_DRIVER_H__
 #include "json.hpp"
 #include "EDDAppInterface.h"
+#include <unordered_map>
 
 
 // Name of the file used to configure data items.
@@ -65,6 +66,7 @@ protected:
     KERESULT StartAlarm(TCHAR* pszName, TCHAR* pszMessage,  int severity);
     KERESULT SetAlarmState(bool bActive);
     KERESULT UploadFile(TCHAR* pszFileName, bool bDelete = false, TCHAR* pszHint = NULL);
+    KERESULT UpdateDataItemsFromMap();
 
     void PublishName();
 
@@ -83,6 +85,9 @@ protected:
     EMutex         m_itemsMtx;
     nlohmann::json m_json;
     nlohmann::json m_deviceDataJson;
+
+    // Map of data items
+    std::unordered_map < std::string, std::string> m_dataItemsMap;
 
     // Helper Functions
     bool parseMessageFromApp(std::string cmd, std::vector<std::string>& cmdParameters);

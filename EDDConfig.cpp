@@ -23,8 +23,9 @@
 #include "pch.h"
 #include "string"
 #include <fstream>
+#include <unordered_map>
 
-constexpr const char* META_DATA_FILE_PATH = "D:\\PTC\\deviceMetaData.json";
+constexpr const wchar_t* META_DATA_FILE_NAME = L"deviceMetaData.json";
 constexpr const char* META_DATA_KEY_IDENTIFIER = "Device_Data";
 constexpr const char* META_DATA_ITEM_NAME_IDENTIFIER = "Name";
 constexpr const char* META_DATA_ITEM_VALUE_IDENTIFIER = "Value";
@@ -43,14 +44,19 @@ EDDConfig::~EDDConfig()
 }
 
 //*****************************************************************************
-KERESULT EDDConfig::Init(TCHAR* pszConfigFile)
+KERESULT EDDConfig::Init()
 {
     // Read and parse configuration json file from root directory.
-    std::ifstream file(pszConfigFile);
     try
     {
+        TCHAR currentDir[MAX_PATH];
+        GetCurrentDirectory(MAX_PATH, currentDir);
+        std::wstring metaDataFilePath = currentDir;
+        metaDataFilePath += L"\\";
+        metaDataFilePath += META_DATA_FILE_NAME;
+
         nlohmann::json inputFile;
-        std::ifstream fileReader(META_DATA_FILE_PATH);
+        std::ifstream fileReader(metaDataFilePath);
         fileReader >> inputFile;
         fileReader.close();
 
@@ -100,12 +106,9 @@ KERESULT EDDConfig::Init(TCHAR* pszConfigFile)
             m_items.AddTail(pItem);
 
         }
-
-        file.close();
     }
     catch (nlohmann::json::exception& e)
     {
-        file.close();
         return KE_FAILED;
     }
 
@@ -113,21 +116,26 @@ KERESULT EDDConfig::Init(TCHAR* pszConfigFile)
 }
 
 //*****************************************************************************
-KERESULT EDDConfig::Update(TCHAR* pszConfigFile)
+KERESULT EDDConfig::Update(std::unordered_map<std::string, std::string>& dataItemsMap)
 {
     // Read and parse configuration json file from root directory.
-    std::ifstream file(pszConfigFile);
     try
     {
+        TCHAR currentDir[MAX_PATH];
+        GetCurrentDirectory(MAX_PATH, currentDir);
+        std::wstring metaDataFilePath = currentDir;
+        metaDataFilePath += L"\\";
+        metaDataFilePath += META_DATA_FILE_NAME;
+
         nlohmann::json inputFile;
-        std::ifstream fileReader(META_DATA_FILE_PATH);
+        std::ifstream fileReader(metaDataFilePath);
         fileReader >> inputFile;
         fileReader.close();
 
         nlohmann::json deviceDataJson;
         deviceDataJson = inputFile[META_DATA_KEY_IDENTIFIER];
-        EDDDataItems newlyReadDataItems;
 
+        // First read all values
         for (nlohmann::json& dataItem : deviceDataJson)
         {
 
@@ -137,46 +145,14 @@ KERESULT EDDConfig::Update(TCHAR* pszConfigFile)
             std::string DataItemWriteableStr = dataItem[META_DATA_ITEM_WRITEABLE_IDENTIFIER].get<std::string>();
             bool IsDataItemReadOnly = DataItemWriteableStr == "no" ? true : false;
 
-            EDDDataItem* pItem = NULL;
-            EString esName;
-            EString esType;
-            EString esValue;
-
-            // Set defaults for writable and value type.
-            bool bReadOnly = IsDataItemReadOnly;
-            CDataValue::ValueType   valueType = CDataValue::STRING;
-
-            if (dataItemType == "boolean")
+            if (IsDataItemReadOnly)
             {
-                valueType = CDataValue::DIGITAL;
+                dataItemsMap[dataItemName] = dataItemValue;
             }
-            else if (dataItemType == "number")
-            {
-                valueType = CDataValue::ANALOG;
-            }
-
-            bool valid = true;
-            esName = EString(dataItemName.c_str());
-            pItem = EDDDataItem::Create(esName, valueType, bReadOnly);
-            esValue = EString(dataItemValue.c_str());
-            pItem->SetValue(esValue);
-            ETimeStamp ts;
-            ETime::GetTimeStamp(&ts);
-            pItem->SetTimestamp(ts);
-            pItem->SetQuality(CDataValue::GOOD);
-
-            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            // Save defined data items
-            // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-            newlyReadDataItems.AddTail(pItem);
-
         }
-
-        file.close();
     }
     catch (nlohmann::json::exception& e)
     {
-        file.close();
         return KE_FAILED;
     }
 

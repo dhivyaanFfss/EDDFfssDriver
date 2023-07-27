@@ -83,8 +83,8 @@ public:
     //KERESULT   OnElement(ESaxElement* pElement);
 
 
-    KERESULT Init(TCHAR* pszConfigFile);
-    KERESULT Update(TCHAR* pszConfigFile);
+    KERESULT Init();
+    KERESULT Update(std::unordered_map<std::string, std::string>& dataItemsMap);
 
 
 protected:

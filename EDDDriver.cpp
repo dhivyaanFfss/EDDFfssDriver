@@ -34,7 +34,7 @@
 #include <sstream>
 #include <vector>
 
-constexpr const char* META_DATA_FILE_PATH      = "D:\\PTC\\deviceMetaData.json";
+
 
 // Commands that will be sent from the app
 constexpr const char* APP_CMD_AGENT_CONNECTION = "connectionStatus";
@@ -47,6 +47,8 @@ constexpr const char* APP_CMD_SW_UPDATE_STATUS = "swUpdateStatus";
 constexpr const char* ASSOCIATION_KEY_RESP_DATA_ITEM = "Association_response";
 constexpr const char* ENTERPRISE_STATUS_DATA_ITEM    = "Connection_status";
 
+static const TCHAR* OFFLINE_VALUE = _T("offline");
+static const TCHAR* ONLINE_VALUE  = _T("online");
 //*****************************************************************************
 //                 EDDDriver  Implemenation
 //*****************************************************************************
@@ -69,7 +71,7 @@ m_deviceDataJson({})
     }
 
     EDDConfig config(m_items);
-    config.Init((TCHAR*) META_DATA_FILE_PATH);
+    config.Init();
 }
 
 //*****************************************************************************
@@ -120,7 +122,8 @@ KERESULT EDDDriver::StartDriver()
 KERESULT EDDDriver::StopDriver()
 {
     // Returns KE_OK on successful; otherwise, returns KE_FAILED or other failure code(s)
-    SysAppIntf::Instance().StopConnection();
+
+    SysAppIntf::Instance().KillProcess();
     g_pEDDMgr->StopAcquistion();
     return KE_OK;
 }
@@ -153,7 +156,27 @@ KERESULT EDDDriver::WriteTagValues(int iTags, EDDHANDLE* pHandles, CDataValue* p
             if (pItem->IsReadOnly())
                 ker = KE_ACCESS_RIGHTS;
             else
+            {
                 ker = pItem->SetValue(pValues[i]);
+
+                // TODO: Test code check if offline
+                // if CONNECTION_STATUS property has value "offline"
+                if (pItem->GetName() == ENTERPRISE_STATUS_DATA_ITEM && pItem->GetValue().GetStringValue() == OFFLINE_VALUE)
+                {
+                    // Get server state as string and output to log
+                    /*EString esDiagnosis;
+                    KERESULT ker = g_pEDDMgr->GetServerDiagnosis(esDiagnosis);
+
+                    ASSERT(ker == KE_OK);
+
+                    g_pEDDMgr->CustomReport(ET_INFO, 2, esDiagnosis);*/
+
+                    // Trigger restart
+                    //g_pEDDMgr->RestartAgent();
+
+                    return KE_OK;
+                }
+            }
         }
         else 
         {
@@ -214,14 +237,8 @@ KERESULT EDDDriver::AddItem(EDDHANDLE handle, const EString& name, int pushData)
     EDDDataItem* pItem = m_items.Find((EString&) name);
     if (pItem == NULL)
         return KE_NOTFOUND;
-    EString msg = "Adding " + name;
-    msg += " push: ";
-    msg += (pushData ? "yes" : "no");
-    UINT id = 900 + pushData;
-    g_pEDDMgr->CustomReport(ET_INFO, 2, msg);
     bool bPush = (pushData) ? true : false;
     pItem->Enable(handle, bPush);
-
     return KE_OK;
 }
 
@@ -284,6 +301,9 @@ void EDDDriver::MessageProcessor(std::string& messageFromApp)
     parseMessageFromApp(messageFromApp, cmdParameters);
 
     std::string operationCmd = cmdParameters[0];
+    EString operationCmdEStr = EString(operationCmd.c_str());
+    EString logMsg(_T("RxD command: ") + operationCmdEStr);
+    g_pEDDMgr->CustomReport(ET_INFO, 4, logMsg);
 
     if (operationCmd == APP_CMD_AGENT_CONNECTION)
     {
@@ -295,14 +315,37 @@ void EDDDriver::MessageProcessor(std::string& messageFromApp)
         std::string response = "offline";
         EString enterpriseStatusDataName(ENTERPRISE_STATUS_DATA_ITEM);
         EDDDataItem* connectionStatus = m_items.Find(enterpriseStatusDataName);
-        std::wstring onlineStatus = L"online";
 
         if (connectionStatus != NULL &&
-            (wcscmp(connectionStatus->GetValue().GetStringValue(), L"online") == 0))
+            (wcscmp(connectionStatus->GetValue().GetStringValue(), ONLINE_VALUE) == 0))
         {
             response = "online";
-            SysAppIntf::Instance().SendToSysApp(response.c_str(), true);
         }
+        else
+        {
+            // Get server state as string and output to log
+            EString esDiagnosis;
+            KERESULT ker = g_pEDDMgr->GetServerDiagnosis(esDiagnosis);
+            std::wstring esDiagnosisWStr(esDiagnosis);
+            response = std::string(esDiagnosisWStr.begin(), esDiagnosisWStr.end());
+        }
+
+        SysAppIntf::Instance().SendToSysApp(response.c_str(), true);
+    }
+    else if (operationCmd == APP_CMD_UPDATE_METADATA)
+    {
+        EDDDataItems dummyItems;
+        EDDConfig config(dummyItems);
+
+        // Read latest from file
+        config.Update(m_dataItemsMap);
+
+        // Now update the items
+        UpdateDataItemsFromMap();
+
+        std::string response = "OK";
+
+        SysAppIntf::Instance().SendToSysApp(response.c_str(), true);
     }
 }
 
@@ -407,4 +450,27 @@ bool EDDDriver::parseMessageFromApp(std::string cmd, std::vector<std::string>& c
     }
 
     return true;
+}
+
+
+
+KERESULT EDDDriver::UpdateDataItemsFromMap()
+{
+    m_itemsMtx.Lock();
+    POSITION pos = m_items.GetHeadPosition();
+    while (pos)
+    {
+        EDDDataItem* pItem = m_items.GetNext(pos);
+        EString esName = pItem->GetName();
+        std::wstring esNameWstr(esName.GetPtr());
+        std::string esNameStr(esNameWstr.begin(), esNameWstr.end());
+        if (m_dataItemsMap.find(esNameStr) != m_dataItemsMap.end())
+        {
+            EString value(m_dataItemsMap[esNameStr].c_str());
+            pItem->SetValue(value);
+        }
+    }
+
+    m_itemsMtx.Unlock();
+    return KE_OK;
 }

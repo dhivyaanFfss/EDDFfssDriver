@@ -112,7 +112,7 @@ KERESULT EDDBrowser::Init()
     //}
 
     EDDConfig config(m_items);
-    KERESULT ker = config.Init((TCHAR*) META_DATA_FILE_PATH);
+    KERESULT ker = config.Init();
 
     return ker;
 }

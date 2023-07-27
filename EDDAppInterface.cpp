@@ -40,49 +40,61 @@ SysAppIntf::~SysAppIntf()
 bool SysAppIntf::StopConnection()
 {
     m_bIsPipeConnected = false;
-    DisconnectNamedPipe(m_pipe);
     CloseHandle(m_pipe);
+    return true;
+}
+
+bool SysAppIntf::KillProcess()
+{
+    m_bIsPipeConnected = false;
     return true;
 }
 
 void SysAppIntf::Initialize()
 {
-   
-    m_pipe = CreateNamedPipe(SYSAPP_PIPE_NAME,
-        PIPE_ACCESS_DUPLEX,
-        PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_NOWAIT,
-        PIPE_UNLIMITED_INSTANCES,
-        MSG_BUFFER,
-        MSG_BUFFER,
-        NMPWAIT_USE_DEFAULT_WAIT,
-        NULL);
+    connect();   
 }
 
 bool SysAppIntf::connect()
 {
     // Blocking call until connection
-    bool success = false;
-    while (!success)
+    while (!m_bIsPipeConnected && m_bRunning)
     {
-        ConnectNamedPipe(m_pipe, NULL);
-        DWORD error = GetLastError();
-        if (success ||
-            (error == ERROR_PIPE_CONNECTED))
+        STARTUPINFO info;
+        ZeroMemory(&info, sizeof(STARTUPINFO));
+        info.cb = sizeof info;
+
+        m_pipe = CreateFile(
+            SYSAPP_PIPE_NAME,
+            PIPE_ACCESS_DUPLEX,
+            0,
+            NULL,
+            OPEN_EXISTING,
+            0,
+            NULL);
+
+        if (m_pipe == INVALID_HANDLE_VALUE)
         {
-            m_bIsPipeConnected = true;
-            success = true;
-        }
-        else if (error != ERROR_IO_PENDING &&
-            error != ERROR_PIPE_LISTENING)
-        {
-            // Some other error occured, restart the pipe and
-            // wait for connection
-            StopConnection();
-            Initialize();
+            DWORD error = GetLastError();
+            std::string errorID = std::to_string(error);
+            EString errorIdEStr = EString(errorID.c_str());
+            EString errorMsg(_T("Cannot connect to pipe: ") + errorIdEStr);
+            g_pEDDMgr->CustomReport(ET_INFO, 4, errorMsg);
+            Sleep(30000);
         }
         else
         {
-            Sleep(5000); // 5.0 seconds sleep before checking again
+            DWORD dwMode = PIPE_READMODE_MESSAGE | PIPE_NOWAIT;
+
+            if (!SetNamedPipeHandleState(m_pipe, &dwMode, NULL, NULL))
+            {
+                // Error message
+                m_bIsPipeConnected = true;
+            }
+            else
+            {
+                m_bIsPipeConnected = false;
+            }
         }
     }
 
@@ -92,7 +104,11 @@ bool SysAppIntf::connect()
 bool SysAppIntf::WaitForSysAppCmd(std::string&  reply)
 {
     m_pipeMtx.Lock();
-    connect();
+    if (!connect())
+    {
+        m_pipeMtx.Unlock();
+        return false;
+    }
 
     if (m_pipe == INVALID_HANDLE_VALUE)
     {
@@ -113,6 +129,7 @@ bool SysAppIntf::WaitForSysAppCmd(std::string&  reply)
         m_bRunning)
     {
         DWORD bytesRead = ReadFile(m_pipe, buffer, sizeof(buffer) - 1, &dwRead, NULL);
+        DWORD error = GetLastError();
         if (bytesRead != 0)
         {
             /* add terminating zero */
@@ -129,10 +146,14 @@ bool SysAppIntf::WaitForSysAppCmd(std::string&  reply)
     return ret;
 }
 
-bool SysAppIntf::SendToSysApp(const char * message, bool flush)
+bool SysAppIntf::SendToSysApp(const char* message, bool flush)
 {
     m_pipeMtx.Lock();
-    connect();
+    if (!connect())
+    {
+        m_pipeMtx.Unlock();
+        return false;
+    }
 
     if (m_pipe == INVALID_HANDLE_VALUE)
     {
@@ -165,6 +186,10 @@ bool SysAppIntf::SendToSysApp(const char * message, bool flush)
     {
         // error message
     }
+
+    EString replyMsg = EString(message);
+    EString logMsg(_T("Sent reply : ") + replyMsg);
+    g_pEDDMgr->CustomReport(ET_INFO, 4, logMsg);
 
     m_pipeMtx.Unlock();
     return (bytesToWrite == written);

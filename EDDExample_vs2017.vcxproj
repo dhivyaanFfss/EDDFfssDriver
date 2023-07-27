@@ -88,7 +88,7 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>EEDDExample</TargetName>
+    <TargetName>EDDFfssDriver</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
@@ -203,7 +203,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>xBase39.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)EEDDExample.dll</OutputFile>
+      <OutputFile>$(OutDir)EDDFfssDriver.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\..\..\CustomComponent\LibsNT\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX64</TargetMachine>
@@ -251,6 +251,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AgentLifecycle.cpp" />
     <ClCompile Include="EDDAlarm.cpp" />
     <ClCompile Include="EDDAppInterface.cpp" />
     <ClCompile Include="EDDBrowser.cpp" />
@@ -261,6 +262,7 @@
     <ClCompile Include="EDDExports.cpp" />
     <ClCompile Include="EDDMgr.cpp" />
     <ClCompile Include="EDDUpload.cpp" />
+    <ClCompile Include="EnterpriseCommunication.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -270,12 +272,14 @@
     <ClCompile Include="SimulatedDataItem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AgentLifecycle.h" />
     <ClInclude Include="EDDAppInterface.h" />
     <ClInclude Include="EDDBrowser.h" />
     <ClInclude Include="EDDConfig.h" />
     <ClInclude Include="EDDDataItem.h" />
     <ClInclude Include="EDDDriver.h" />
     <ClInclude Include="EDDMgr.h" />
+    <ClInclude Include="EnterpriseCommunication.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SimulatedDataItem.h" />
   </ItemGroup>

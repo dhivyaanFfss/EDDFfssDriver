@@ -35,6 +35,9 @@
 #include "ISM.h"
 
 #include "IEnterpriseProxy.h"
+#include "IRestart.h"
+#include "EnterpriseCommunication.h"
+#include "AgentLifecycle.h"
 
 // General includes for all EDD Drivers.
 #include "EDD_Common.h"

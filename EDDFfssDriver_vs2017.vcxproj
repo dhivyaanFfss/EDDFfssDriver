@@ -76,7 +76,7 @@
     <OutDir>$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>EEDDExample</TargetName>
+    <TargetName>EDDFfssDriver</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(Configuration)\</OutDir>
@@ -94,7 +94,7 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>FfssDriver</TargetName>
+    <TargetName>EDDFfssDriver</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -126,7 +126,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>xBase39.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)EEDDExample.dll</OutputFile>
+      <OutputFile>$(OutDir)EDDFfssDriver.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\..\..\CustomComponent\LibsNT;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX86</TargetMachine>
@@ -184,7 +184,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\..\..\..\CustomComponent\Headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;EDDExample_EXPORTS;DRIVER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GATEWAY__;WIN32;NDEBUG;_WINDOWS;_USRDLL;EDDExample_EXPORTS;DRIVER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -222,7 +222,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\..\..\CustomComponent\Headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;EDDExample_EXPORTS;DRIVER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__GATEWAY__;WIN32;_DEBUG;_WINDOWS;_USRDLL;EDDExample_EXPORTS;DRIVER_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>Async</ExceptionHandling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -261,12 +261,14 @@
     <ClCompile Include="EDDExports.cpp" />
     <ClCompile Include="EDDMgr.cpp" />
     <ClCompile Include="EDDUpload.cpp" />
+    <ClCompile Include="EnterpriseCommunication.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="AgentLifecycle.cpp" />
     <ClCompile Include="SimulatedDataItem.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -276,7 +278,9 @@
     <ClInclude Include="EDDDataItem.h" />
     <ClInclude Include="EDDDriver.h" />
     <ClInclude Include="EDDMgr.h" />
+    <ClInclude Include="EnterpriseCommunication.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="AgentLifecycle.h" />
     <ClInclude Include="SimulatedDataItem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

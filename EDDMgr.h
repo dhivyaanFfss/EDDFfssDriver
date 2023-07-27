@@ -37,7 +37,9 @@ public:
     virtual ~EDDMgr();
 
     // IKerneBbase methods
-    bool GetInterface(KERNEL_IID InterfaceID, void** ppInterface);
+    bool        GetInterface(KERNEL_IID InterfaceID, void** ppInterface);
+    KERESULT    GetServerDiagnosis(EString& esDiagnosis);
+    KERESULT    RestartAgent();
 
     // IEDDManager methods
     KERESULT CreateEDDDriver(IEDDCallback*, TCHAR* pID, IEDDDriver*&, EDDDriverInfo* pEDDDriverInfo = NULL);
@@ -88,6 +90,10 @@ protected:
     // Support interfaces
     IKernelLog*             m_pIKernelLog;
     IMsgManager*            m_pIMsgManager;
+
+    // Wrapper helper objects
+    EnterpriseCommunication m_enterpriseComm;
+    AgentLifecycle          m_agentLifecycle;
 
     // Thread functionality.  In this example, the Thread is per the single
     // instance of the manager.  Threads can be per IEEDDriver instances as well.
