@@ -67,6 +67,7 @@ protected:
     KERESULT SetAlarmState(bool bActive);
     KERESULT UploadFile(TCHAR* pszFileName, bool bDelete = false, TCHAR* pszHint = NULL);
     KERESULT UpdateDataItemsFromMap();
+    KERESULT UpdateDataItemsFromFile();
 
     void PublishName();
 

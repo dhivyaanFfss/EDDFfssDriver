@@ -42,6 +42,9 @@ constexpr const char* APP_CMD_UPDATE_METADATA  = "updateMetaData";
 constexpr const char* APP_CMD_CLOUD_CONNECTION_STATUS = "cloudConnectionStatus";
 constexpr const char* APP_CMD_ASSOCIATION_KEY_REQ = "associationKeyReq";
 constexpr const char* APP_CMD_SW_UPDATE_STATUS = "swUpdateStatus";
+constexpr const char* APP_CMD_INST_ASSOCIATION_RESPONSE = "instAssociationResponse";
+constexpr const char* APP_CMD_INST_ASSOCIATION_REQ = "instAssociationReq";
+
 
 // Data item name that will be read from the agent
 constexpr const char* ASSOCIATION_KEY_RESP_DATA_ITEM = "Association_response";
@@ -334,17 +337,40 @@ void EDDDriver::MessageProcessor(std::string& messageFromApp)
     }
     else if (operationCmd == APP_CMD_UPDATE_METADATA)
     {
-        EDDDataItems dummyItems;
-        EDDConfig config(dummyItems);
+        UpdateDataItemsFromFile();
+        std::string response = "OK";
+        SysAppIntf::Instance().SendToSysApp(response.c_str(), true);
+    }
+    else if (operationCmd == APP_CMD_INST_ASSOCIATION_REQ)
+    {
+        EString associationKeyRespDataName(ASSOCIATION_KEY_RESP_DATA_ITEM);
+        EDDDataItem* associationKeyResponse = m_items.Find(associationKeyRespDataName);
 
-        // Read latest from file
-        config.Update(m_dataItemsMap);
+        if (associationKeyResponse != NULL)
+        {
+            // Reset response before request
+            EString emptyStr("");
+            associationKeyResponse->SetValue(emptyStr);
+        }
 
-        // Now update the items
-        UpdateDataItemsFromMap();
+        // Pull the latest from file, request string will get updated
+        UpdateDataItemsFromFile();
 
         std::string response = "OK";
+        SysAppIntf::Instance().SendToSysApp(response.c_str(), true);
+    }
+    else if (operationCmd == APP_CMD_INST_ASSOCIATION_RESPONSE)
+    {
+        EString associationKeyRespDataName(ASSOCIATION_KEY_RESP_DATA_ITEM);
+        EDDDataItem* associationKeyResponse = m_items.Find(associationKeyRespDataName);
+        std::wstring responseWstr;
 
+        if (associationKeyResponse != NULL)
+        {
+            responseWstr = associationKeyResponse->GetValue().GetStringValue();
+        }
+
+        std::string response(responseWstr.begin(), responseWstr.end());
         SysAppIntf::Instance().SendToSysApp(response.c_str(), true);
     }
 }
@@ -472,5 +498,19 @@ KERESULT EDDDriver::UpdateDataItemsFromMap()
     }
 
     m_itemsMtx.Unlock();
+    return KE_OK;
+}
+
+KERESULT EDDDriver::UpdateDataItemsFromFile()
+{
+    EDDDataItems dummyItems;
+    EDDConfig config(dummyItems);
+
+    // Read latest from file to the map
+    config.Update(m_dataItemsMap);
+
+    // Now update the items from map
+    UpdateDataItemsFromMap();
+
     return KE_OK;
 }
