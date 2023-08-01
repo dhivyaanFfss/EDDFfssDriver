@@ -147,7 +147,7 @@
 
 // A message file is used for stings displayed to the operator that may need 
 // to be internationalized.
-static  TCHAR* MESSAGES_FILE = _T("EDDMessages");
+static  TCHAR* MESSAGES_FILE = _T("EDDFfssDriverMessages");
 
 //*****************************************************************************
 //  There should only be ONE EDD Manager. 
@@ -301,7 +301,7 @@ void EDDMgr::StartAcquistion()
         m_AcquisitionThread.Begin(AcquisitionThreadStub, (void*)this,
             _T("EDDFfssDriver"));  // name useful under debugging.
 
-        m_AppInterfaceThread.Begin(AppInterfaceThreadStub, (void*)this,
+        m_PublishThread.Begin(PublishInterfaceThreadStub, (void*)this,
             _T("EDDFfssDriver2"));  // name useful under debugging.
 
     }
@@ -313,8 +313,13 @@ void EDDMgr::StopAcquistion()
     if (m_bRunning)
     {
         m_bRunning = false;
-        m_AcquisitionThread.Kill();
-        m_AppInterfaceThread.Kill();
+        // Signal thread to shutdown and wait for clean exit of thread.
+        m_EDDEvent.Set(); 
+        m_AcquisitionThread.Wait();
+
+        // Signal thread to shutdown and wait for clean exit of thread.
+        m_PublishThreadEvent.Set();
+        m_PublishThread.Wait();
     }
 }
 
@@ -361,15 +366,15 @@ ThreadReturn EDDMgr::AcquisitionThread()
 		ETime startTime;
 
         // Acquire and publish data.
-        m_driversMtx.Lock();
+        //m_driversMtx.Lock();
         POSITION pos = m_drivers.GetHeadPosition();
         while (pos)
         {
             EDDDriver* pDriver = m_drivers.GetNext(pos);
             pDriver->Acquire();
-            pDriver->Publish();
+            //pDriver->Publish();
         }
-        m_driversMtx.Unlock();
+        //m_driversMtx.Unlock();
 
         // Reset wait time based on length of time in acquisition.
 		ETime endTime;      // resolution of milliseconds.
@@ -383,9 +388,41 @@ ThreadReturn EDDMgr::AcquisitionThread()
     return (ThreadReturn) 1;
 }
 
-ThreadReturn EDDMgr::AppInterfaceThread()
+ThreadReturn EDDMgr::PublishInterfaceThread()
 {
-   
+    DWORD dwMilliSecWait = m_acqRate;
+
+    while (m_bRunning)
+    {
+        // At signal of event (m_EEDEvent object) or after elapsed wait time, 
+        // acquire and publish data and other desired processing.
+        m_PublishThreadEvent.Wait(dwMilliSecWait);
+        m_PublishThreadEvent.Reset();         // Reset signal
+        if (!m_bRunning)
+            break;
+
+        // Measure length of time spent during acquisition.
+        ETime startTime;
+
+        // Acquire and publish data.
+        //m_driversMtx.Lock();
+        POSITION pos = m_drivers.GetHeadPosition();
+        while (pos)
+        {
+            EDDDriver* pDriver = m_drivers.GetNext(pos);
+            pDriver->Publish();
+        }
+        //m_driversMtx.Unlock();
+
+        // Reset wait time based on length of time in acquisition.
+        ETime endTime;      // resolution of milliseconds.
+        DWORD elapsedTime = (DWORD)(endTime.DiffTime(startTime) * 1000);
+        if (elapsedTime > m_acqRate)
+            dwMilliSecWait = 0;
+        else
+            dwMilliSecWait = m_acqRate - elapsedTime;
+    }
+    
     return (ThreadReturn) 1;
 }
 

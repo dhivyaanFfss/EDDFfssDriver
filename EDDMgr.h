@@ -74,10 +74,10 @@ protected:
 		return ((EDDMgr*)pThis)->AcquisitionThread();
 	}
 
-    ThreadReturn   AppInterfaceThread();
-    static ThreadReturn __stdcall AppInterfaceThreadStub(void* pThis)
+    ThreadReturn   PublishInterfaceThread();
+    static ThreadReturn __stdcall PublishInterfaceThreadStub(void* pThis)
     {
-        return ((EDDMgr*)pThis)->AppInterfaceThread();
+        return ((EDDMgr*)pThis)->PublishInterfaceThread();
     }
 
 
@@ -99,7 +99,8 @@ protected:
     // instance of the manager.  Threads can be per IEEDDriver instances as well.
     bool                    m_bRunning;
     EThread                 m_AcquisitionThread;
-    EThread                 m_AppInterfaceThread;
+    EThread                 m_PublishThread;
+    ESingleEvent            m_PublishThreadEvent;
     ESingleEvent            m_EDDEvent;
     DWORD                   m_acqRate;      // in milliseconds
 

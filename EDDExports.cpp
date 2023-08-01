@@ -39,8 +39,8 @@ int             g_driverInitialized = 0;
 // The function is in the format "EDD_XXX_Initialize"
 // where XXX is the name of this driver module, minus the suffix.
 //
-// For example: This module name is "EEDDExample.dll" and the corresponding
-// Init function name is "EDD_EEDDExample_Initialize()".
+// For example: This module name is "EDDFfssDriver.dll" and the corresponding
+// Init function name is "EDD_EDDFfssDriver_Initialize()".
 //
 //*****************************************************************************
 

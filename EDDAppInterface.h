@@ -30,11 +30,13 @@ public:
 private:
     SysAppIntf();
 
+    ESingleEvent    m_sysAppEvent;  // used for waiting and clean shutdown.
     HANDLE m_pipe;
     bool m_bIsPipeConnected;
     bool connect();
     bool disconnect();
     bool m_bRunning;
+    bool m_bLogPipeError;
     EMutex m_pipeMtx;
 
 public:

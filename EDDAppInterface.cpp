@@ -23,7 +23,8 @@ SysAppIntf & SysAppIntf::Instance()
 SysAppIntf::SysAppIntf() :
     m_pipe(INVALID_HANDLE_VALUE),
     m_bIsPipeConnected(false),
-    m_bRunning(true)
+    m_bRunning(true),
+    m_bLogPipeError(true)
 {
 }
 
@@ -79,8 +80,12 @@ bool SysAppIntf::connect()
             std::string errorID = std::to_string(error);
             EString errorIdEStr = EString(errorID.c_str());
             EString errorMsg(_T("Cannot connect to pipe: ") + errorIdEStr);
-            g_pEDDMgr->CustomReport(ET_INFO, 4, errorMsg);
-            Sleep(30000);
+            if (m_bLogPipeError)
+            {
+                g_pEDDMgr->CustomReport(ET_INFO, 4, errorMsg);
+                m_bLogPipeError = false;
+            }
+            Sleep(3000);
         }
         else
         {
@@ -88,11 +93,17 @@ bool SysAppIntf::connect()
 
             if (!SetNamedPipeHandleState(m_pipe, &dwMode, NULL, NULL))
             {
-                // Error message
                 m_bIsPipeConnected = true;
+                // Reset loggin, so we log next error
+                m_bLogPipeError = true;
             }
             else
             {
+                DWORD error = GetLastError();
+                std::string errorID = std::to_string(error);
+                EString errorIdEStr = EString(errorID.c_str());
+                EString errorMsg(_T("Cannot set named pipe state, error: ") + errorIdEStr);
+                g_pEDDMgr->CustomReport(ET_INFO, 4, errorMsg);
                 m_bIsPipeConnected = false;
             }
         }

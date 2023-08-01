@@ -108,7 +108,6 @@ KERESULT EDDDriver::Destroy()
 //*****************************************************************************
 KERESULT EDDDriver::StartDriver()
 {
-    SysAppIntf::Instance().Initialize();
     g_pEDDMgr->StartAcquistion();
 	return KE_OK;
 }
@@ -178,6 +177,67 @@ KERESULT EDDDriver::WriteTagValues(int iTags, EDDHANDLE* pHandles, CDataValue* p
                     //g_pEDDMgr->RestartAgent();
 
                     return KE_OK;
+                }
+                
+                // Example code from Jim 
+                /* In this example, the EDD_TEXT drive set the digital data item "CertAuthorizationFailed" to 1
+                   indicating that the Device Authority Credential Manager has a "Authorization failed" message.
+                   
+                   This code will obtain (read) the EDD_TEXT's analog data item "AuthorizationFailedCode" to obtain the error
+                   code.  Based on experience, this code may indicate diffent workflow.
+                   In this case, the code is ignored, and the Agent is restarted.  
+                   Another option is to stop the Agent and change the Windows Server so that it is not automatically started.
+                   In this case, the FFSS needs to know when the Service needs to be restarted.
+
+                   Note:  data item name can be changed, but must match what is in the EDD_TEXT.xml file.  
+                */
+                if (pItem->GetName() == _T("CertAuthorizationFailed"))
+                {
+                    // The EDD_TEXT will set this value to 1. Since the "trigger" has occured, make sure to rest to 0.
+                    pItem->SetValue((bool)false);
+
+                    // read the AuthorizationFailedCode
+                    IDynamicData* pIDynamicData = NULL;
+                    g_pEDDMgr->GetInterface(IID_DYNAMIC_DATA, (void**)&pIDynamicData);
+                    if (pIDynamicData)
+                    {
+                        const TCHAR* pszItemName = _T("AuthorizationFailedCode");
+                        EHANDLE hDataItem = 0;
+                        pIDynamicData->OpenDataItems(1, &pszItemName, &hDataItem);
+                        if (hDataItem)
+                        {
+                            // Data item found, obtain it value.
+                            CDataValue dataValue;
+                            KERESULT ker = KE_FAILED; 
+                            pIDynamicData->GetDataItemValues(1, &hDataItem, false, INFINITE, &dataValue, &ker);
+                            if (ker == KE_OK)
+                            {
+                                // dataValue holds the fail cURL code.
+                                // for a list of codes, see:  https://curl.se/libcurl/c/libcurl-errors.html
+                                // Log for testing purposes.
+                                EString logMsg;
+                                EString esValue; 
+                                dataValue.GetString(esValue);
+                                logMsg.Format(_T("Data item %s = %s"), pszItemName, esValue.GetPtr());
+                                g_pEDDMgr->CustomReport(ET_INFO, 4, logMsg);
+                            }
+                            else
+                            {
+                                ASSERT(0);
+                            }
+                            pIDynamicData->CloseDataItems(1, &hDataItem, &ker);
+                        }
+
+                        // Proposed approach:  
+                        //   - Delete the revoked certificate and private key
+                        //   - and restart the Agent.  The Agent will wait for a new set of certificates.
+                    }
+                    else
+                    {
+                        // This interface will always be available, but just to verify...
+                        ASSERT(0);
+                    }
+
                 }
             }
         }
