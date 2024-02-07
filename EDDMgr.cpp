@@ -147,7 +147,7 @@
 
 // A message file is used for stings displayed to the operator that may need 
 // to be internationalized.
-static  TCHAR* MESSAGES_FILE = _T("EDDFfssDriverMessages");
+static  TCHAR* MESSAGES_FILE = _T("EDDMessages");
 
 //*****************************************************************************
 //  There should only be ONE EDD Manager. 
@@ -309,7 +309,6 @@ void EDDMgr::StartAcquistion()
 
 void EDDMgr::StopAcquistion()
 {
-    // Start example thread.  Only manager thread needed.
     if (m_bRunning)
     {
         m_bRunning = false;

@@ -525,6 +525,8 @@ bool EDDDriver::IsItemPublishable(EDDDataItem* pItem)
     return isPublishable;
 }
 
+//*****************************************************************************
+// Splits the received command into multiple parameters
 bool EDDDriver::parseMessageFromApp(std::string cmd, std::vector<std::string>& cmdParameters)
 {
     std::stringstream cmdStream(cmd);
@@ -539,7 +541,7 @@ bool EDDDriver::parseMessageFromApp(std::string cmd, std::vector<std::string>& c
 }
 
 
-
+//*****************************************************************************
 KERESULT EDDDriver::UpdateDataItemsFromMap()
 {
     m_itemsMtx.Lock();
@@ -561,6 +563,8 @@ KERESULT EDDDriver::UpdateDataItemsFromMap()
     return KE_OK;
 }
 
+//*****************************************************************************
+// Helper function that will update the latest data values from config file
 KERESULT EDDDriver::UpdateDataItemsFromFile()
 {
     EDDDataItems dummyItems;

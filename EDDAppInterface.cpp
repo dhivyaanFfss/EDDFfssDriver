@@ -76,12 +76,12 @@ bool SysAppIntf::connect()
 
         if (m_pipe == INVALID_HANDLE_VALUE)
         {
-            DWORD error = GetLastError();
-            std::string errorID = std::to_string(error);
-            EString errorIdEStr = EString(errorID.c_str());
-            EString errorMsg(_T("Cannot connect to pipe: ") + errorIdEStr);
             if (m_bLogPipeError)
             {
+				DWORD error = GetLastError();
+				std::string errorID = std::to_string(error);
+				EString errorIdEStr = EString(errorID.c_str());
+				EString errorMsg(_T("Cannot connect to pipe: ") + errorIdEStr);
                 g_pEDDMgr->CustomReport(ET_INFO, 4, errorMsg);
                 m_bLogPipeError = false;
             }
